@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CCTV AI Security System</title>
+  
+  <!-- External CSS Files -->
+  <link rel="stylesheet" href="css/variable.css">
+  <link rel="stylesheet" href="css/global.css">
+  <link rel="stylesheet" href="css/component.css">
+  <link rel="stylesheet" href="css/pages.css">
+  <link rel="stylesheet" href="css/responsive.css">
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-header">
+        <div class="sidebar-logo">🎥 CCTV AI System</div>
+      </div>
+      <div class="user-profile" id="user-profile">
+        <div class="user-avatar" id="user-avatar">U</div>
+        <div class="user-info">
+          <div class="user-name" id="user-name">Loading...</div>
+          <div class="user-role" id="user-role">...</div>
+        </div>
+      </div>
+      <nav class="sidebar-nav" id="sidebar-nav">
+        <!-- Nav items injected by JS -->
+      </nav>
+      <div class="sidebar-footer">
+        <button id="logout-btn" class="btn btn-danger btn-sm" style="width:100%">🚪 Logout</button>
+      </div>
+    </aside>
+    
+    <!-- Navbar -->
+    <header id="navbar">
+      <div class="navbar-left">
+        <h2 class="page-title" id="page-title">Dashboard</h2>
+      </div>
+      <div class="navbar-right">
+        <button class="navbar-icon-btn" title="Notifications">🔔</button>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:32px;height:32px;background:var(--accent-primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-weight:600" id="navbar-avatar">U</div>
+          <span style="font-size:0.875rem;font-weight:500" id="navbar-name">User</span>
+        </div>
+      </div>
+    </header>
+    
+    <!-- Page Content -->
+    <main id="page-content">
+      <div style="text-align:center;padding:40px;color:var(--text-secondary)">
+        <div style="font-size:3rem;margin-bottom:16px">🎥</div>
+        <h2>Loading Dashboard...</h2>
+      </div>
+    </main>
+  </div>
+  
+  <!-- INLINE JAVASCRIPT -->
+   // 🔗 BACKEND CONFIGURATION - UPDATE THESE VALUES
+const API_CONFIG = {
+  BASE_URL: 'http://10.251.83.27:8000',  // ← UPDATE: Your backend IP:port
+  API_VERSION: '/api/v1',
+  TIMEOUT: 30000,  // 30 seconds
+};
+
+// API endpoints (relative to BASE_URL + API_VERSION)
+const ENDPOINTS = {
+  AUTH: {
+    LOGIN: '/auth/login',
+    LOGOUT: '/auth/logout',
+    ME: '/auth/me',
+  },
+  CAMERAS: {
+    LIST: '/cameras',
+    DETAIL: (id) => `/cameras/${id}`,
+  },
+  STREAM: {
+    LIVE: '/stream/live',
+    PLAYBACK: '/stream/playback',
+  },
+  AI: {
+    RISK_SCORE: (id) => `/risk/score/${id}`,
+    EVENTS: '/events',
+  },
+  SYSTEM: {
+    HEALTH: '/health',
+  },
+};
+
+// 🔗 API CLIENT - Fetch wrapper with auth and error handling
+const api = {
+  token: localStorage.getItem('cctv_token') || null,
+  
+  // Set auth token
+  setToken(token) {
+    this.token = token;
+    localStorage.setItem('cctv_token', token);
+  },
+  
+  // Clear auth token
+  clearToken() {
+    this.token = null;
+    localStorage.removeItem('cctv_token');
+  },
+  
+  // Internal fetch with auth headers
+  async _request(endpoint, options = {}) {
+    const url = endpoint.startsWith('http') 
+      ? endpoint 
+      : `${API_CONFIG.BASE_URL}${API_CONFIG.API_VERSION}${endpoint}`;
+    
+    const config = {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        ...options.headers,
+      },
+      ...options,
+    };
+    
+    // Add auth token if available
+    if (this.token) {
+      config.headers['Authorization'] = `Bearer ${this.token}`;
+    }
+    
+    try {
+      // Add timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), API_CONFIG.TIMEOUT);
+      
+      const response = await fetch(url, {
+        ...config,
+        signal: controller.signal,
+      });
+      
+      clearTimeout(timeoutId);
+      
+      // Handle HTTP errors
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.message || `HTTP ${response.status}`);
+      }
+      
+      // Parse JSON or return empty object
+      const data = await response.json().catch(() => null);
+      return data || {};
+      
+    } catch (error) {
+      console.error('API Request Failed:', error.message);
+      return null;  // Return null for graceful fallback
+    }
+  },
+  
+  // ==================== AUTH ====================
+  
+  async login(email, password) {
+    try {
+      const result = await this._request(ENDPOINTS.AUTH.LOGIN, {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+      
+      if (result?.access_token) {
+        this.setToken(result.access_token);
+        // Store user data
+        const user = result.user || { email, role: 'officer', name: email.split('@')[0] };
+        localStorage.setItem('cctv_user', JSON.stringify(user));
+      }
+      
+      return result;
+    } catch (error) {
+      console.warn('Backend login failed');
+      return null;
+    }
+  },
+  
+  async logout() {
+    await this._request(ENDPOINTS.AUTH.LOGOUT, { method: 'POST' });
+    this.clearToken();
+    localStorage.removeItem('cctv_user');
+  },
+  
+  async getCurrentUser() {
+    return await this._request(ENDPOINTS.AUTH.ME);
+  },
+  
+  // ==================== CAMERAS ====================
+  
+  async getCameras(params = {}) {
+    const queryString = new URLSearchParams(params).toString();
+    const endpoint = queryString 
+      ? `${ENDPOINTS.CAMERAS.LIST}?${queryString}`
+      : ENDPOINTS.CAMERAS.LIST;
+    
+    const result = await this._request(endpoint);
+    return result?.cameras || [];
+  },
+  
+  // ==================== VIDEO STREAMS ====================
+  
+  getLiveStreamUrl(cameraId) {
+    return `${API_CONFIG.BASE_URL}${API_CONFIG.API_VERSION}${ENDPOINTS.STREAM.LIVE}?camera_id=${cameraId}`;
+  },
+  
+  getPlaybackUrl(cameraId, startTime, endTime) {
+    const params = new URLSearchParams({
+      camera_id: cameraId,
+      start: startTime,
+      end: endTime,
+    });
+    return `${API_CONFIG.BASE_URL}${API_CONFIG.API_VERSION}${ENDPOINTS.STREAM.PLAYBACK}?${params}`;
+  },
+  
+  // ==================== AI & EVENTS ====================
+  
+  async getRiskScore(cameraId) {
+    return await this._request(ENDPOINTS.AI.RISK_SCORE(cameraId));
+  },
+  
+  async getEvents(limit = 50) {
+    const result = await this._request(`${ENDPOINTS.AI.EVENTS}?limit=${limit}`);
+    return result?.events || [];
+  },
+  
+  // ==================== SYSTEM ====================
+  
+  async healthCheck() {
+    const result = await this._request(ENDPOINTS.SYSTEM.HEALTH);
+    return result?.status === 'healthy';
+  },
+};
+
+
+  <script>
+    // Demo data
+    const DEMO_CAMERAS = [
+      { id: 1, name: 'Entrance Main', location: 'Front Door', status: 'online' },
+      { id: 2, name: 'Parking Lot A', location: 'North Parking', status: 'online' },
+      { id: 3, name: 'Warehouse Entry', location: 'Loading Dock', status: 'offline' },
+      { id: 4, name: 'Office Hallway', location: '2nd Floor', status: 'online' }
+    ];
+    
+    const ROLE_PERMISSIONS = {
+      admin: ['dashboard', 'live', 'playback', 'cameras', 'users', 'settings'],
+      officer: ['dashboard', 'live', 'playback'],
+      viewer: ['dashboard', 'live']
+    };
+    
+    // Auth check
+    const token = localStorage.getItem('cctv_token');
+    const userStr = localStorage.getItem('cctv_user');
+    if (!token || !userStr) {
+      window.location.href = 'index.html';
+    }
+    const user = JSON.parse(userStr);
+    
+    // Initialize app
+    document.addEventListener('DOMContentLoaded', () => {
+      // Set user info
+      document.getElementById('user-name').textContent = user.name;
+      document.getElementById('user-role').textContent = user.role.toUpperCase();
+      document.getElementById('user-avatar').textContent = user.name.charAt(0).toUpperCase();
+      document.getElementById('navbar-name').textContent = user.name.split(' ')[0];
+      document.getElementById('navbar-avatar').textContent = user.name.charAt(0).toUpperCase();
+      
+      // Render sidebar nav
+      renderSidebar();
+      
+      // Handle navigation
+      window.navigate = (page) => {
+        window.location.hash = page;
+        renderPage(page);
+      };
+      
+      // Handle logout
+      document.getElementById('logout-btn').addEventListener('click', () => {
+        localStorage.removeItem('cctv_token');
+        localStorage.removeItem('cctv_user');
+        window.location.href = 'index.html';
+      });
+      
+      // Handle hash changes
+      window.addEventListener('hashchange', () => {
+        const page = window.location.hash.slice(1) || 'dashboard';
+        renderPage(page);
+      });
+      
+      // Initial page render
+      const initialPage = window.location.hash.slice(1) || 'dashboard';
+      renderPage(initialPage);
+    });
+    
+    // Render sidebar navigation
+    function renderSidebar() {
+      const nav = document.getElementById('sidebar-nav');
+      const allowedPages = ROLE_PERMISSIONS[user.role] || ['dashboard'];
+      
+      const navItems = [
+        { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+        { id: 'live', label: 'Live Feed', icon: '🔴' },
+        { id: 'playback', label: 'Playback', icon: '📼' },
+        { id: 'cameras', label: 'Cameras', icon: '📹', adminOnly: true },
+        { id: 'users', label: 'Users', icon: '👥', adminOnly: true },
+        { id: 'settings', label: 'Settings', icon: '⚙️', adminOnly: true }
+      ];
+      
+      nav.innerHTML = allowedPages.map(pageId => {
+        const item = navItems.find(i => i.id === pageId);
+        if (!item) return '';
+        return `
+          <button class="nav-link ${pageId === 'dashboard' ? 'active' : ''}" 
+                  data-page="${pageId}" 
+                  onclick="navigate('${pageId}')">
+            <span class="nav-link-icon">${item.icon}</span>
+            <span class="nav-link-label">${item.label}</span>
+          </button>
+        `;
+      }).join('');
+    }
+    
+    // Render page content
+    function renderPage(page) {
+      const content = document.getElementById('page-content');
+      const pageTitle = document.getElementById('page-title');
+      
+      // Update active nav
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.toggle('active', link.dataset.page === page);
+      });
+      
+      // Page titles
+      const titles = {
+        dashboard: 'Dashboard',
+        live: 'Live Feed Monitoring',
+        playback: 'Video Playback',
+        cameras: 'Camera Management',
+        users: 'User Management',
+        settings: 'System Settings'
+      };
+      pageTitle.textContent = titles[page] || 'Dashboard';
+      
+      // Render page content
+      switch(page) {
+        case 'dashboard':
+          content.innerHTML = renderDashboard();
+          break;
+        case 'live':
+          content.innerHTML = renderLiveFeed();
+          break;
+        case 'playback':
+          content.innerHTML = renderPlayback();
+          break;
+        case 'cameras':
+          if (user.role !== 'admin') {
+            content.innerHTML = '<div class="alert alert-warning">🚫 Admin access required</div>';
+            return;
+          }
+          content.innerHTML = renderCameras();
+          break;
+        case 'users':
+          if (user.role !== 'admin') {
+            content.innerHTML = '<div class="alert alert-warning">🚫 Admin access required</div>';
+            return;
+          }
+          content.innerHTML = renderUsers();
+          break;
+        case 'settings':
+          if (user.role !== 'admin') {
+            content.innerHTML = '<div class="alert alert-warning">🚫 Admin access required</div>';
+            return;
+          }
+          content.innerHTML = renderSettings();
+          break;
+        default:
+          content.innerHTML = '<div class="alert alert-warning">Page not found</div>';
+      }
+    }
+    
+    // Page renderers
+    function renderDashboard() {
+      return `
+        <div class="page-header">
+          <h1 class="page-title-large">📊 Dashboard</h1>
+          <p class="page-subtitle">System overview and quick access</p>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-icon">📹</div><div class="stat-value">${DEMO_CAMERAS.length}</div><div class="stat-label">Cameras</div></div>
+          <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-value">3</div><div class="stat-label">Active Alerts</div></div>
+          <div class="stat-card"><div class="stat-icon">💾</div><div class="stat-value">78%</div><div class="stat-label">Storage Used</div></div>
+          <div class="stat-card"><div class="stat-icon">🟢</div><div class="stat-value">98%</div><div class="stat-label">System Health</div></div>
+        </div>
+        <h3 style="margin-bottom:16px">📹 Camera Overview</h3>
+        <div class="camera-grid">
+          ${DEMO_CAMERAS.slice(0,4).map(cam => `
+            <div class="camera-card" onclick="navigate('live')">
+              <div class="camera-card-header">
+                <span class="camera-card-name">📹 ${cam.name}</span>
+                <span style="color:${cam.status==='online'?'var(--success)':'var(--danger)'}">● ${cam.status}</span>
+              </div>
+              <div class="camera-card-preview">${cam.status==='online'?'📡 Live':'⚠️ Offline'}</div>
+              <div class="camera-card-footer"><span>📍 ${cam.location}</span><span>ID: ${cam.id}</span></div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+    
+    function renderLiveFeed() {
+      return `
+        <div class="page-header">
+          <h1 class="page-title-large">🔴 Live Feed</h1>
+          <p class="page-subtitle">Real-time monitoring</p>
+        </div>
+        <div style="margin-bottom:16px">
+          <label style="display:block;margin-bottom:4px;font-size:0.875rem;color:var(--text-secondary)">Select Camera</label>
+          <select style="width:100%;padding:8px;border-radius:4px;background:var(--bg-secondary);border:1px solid var(--border-color);color:var(--text-primary)">
+            ${DEMO_CAMERAS.map(c => `<option value="${c.id}">${c.name} (${c.status})</option>`).join('')}
+          </select>
+        </div>
+        <div style="background:#000;border-radius:12px;height:400px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);margin-bottom:16px">
+          📡 Stream Placeholder
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="stat-card"><div class="stat-value" style="color:var(--success)">LOW</div><div class="stat-label">Risk Level</div></div>
+          <div class="stat-card"><div class="stat-value">👤🚗</div><div class="stat-label">Detected Objects</div></div>
+        </div>
+      `;
+    }
+    
+    function renderPlayback() {
+      return `
+        <div class="page-header">
+          <h1 class="page-title-large">📼 Playback</h1>
+          <p class="page-subtitle">Historical footage review</p>
+        </div>
+        ${user.role==='officer'?'<div class="alert alert-warning">⚠️ Limited access for officers</div>':''}
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:16px">
+          <div><label style="font-size:0.875rem;color:var(--text-secondary)">Camera</label><select style="width:100%;padding:8px;margin-top:4px"><option>All</option>${DEMO_CAMERAS.map(c=>`<option>${c.name}</option>`).join('')}</select></div>
+          <div><label style="font-size:0.875rem;color:var(--text-secondary)">Date</label><input type="date" style="width:100%;padding:8px;margin-top:4px"/></div>
+        </div>
+        <button class="btn">🔍 Search</button>
+        <div style="background:#000;border-radius:12px;height:400px;display:flex;align-items:center;justify-content:center;color:var(--text-secondary);margin:16px 0">
+          📼 Select date/time to load footage
+        </div>
+      `;
+    }
+    
+    function renderCameras() {
+      return `
+        <div class="page-header">
+          <h1 class="page-title-large">📹 Cameras</h1>
+          <p class="page-subtitle">Manage security cameras</p>
+        </div>
+        <button class="btn" style="margin-bottom:16px">➕ Add Camera</button>
+        <table style="width:100%;border-collapse:collapse;background:var(--bg-secondary);border-radius:8px;overflow:hidden">
+          <thead><tr style="background:var(--bg-secondary)"><th style="padding:12px;text-align:left">ID</th><th>Name</th><th>Location</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody>
+            ${DEMO_CAMERAS.map(c => `
+              <tr style="border-bottom:1px solid var(--border-color)">
+                <td style="padding:12px">${c.id}</td>
+                <td>📹 ${c.name}</td>
+                <td>📍 ${c.location}</td>
+                <td><span style="color:${c.status==='online'?'var(--success)':'var(--danger)'}">● ${c.status}</span></td>
+                <td><button class="btn btn-sm">✏️</button> <button class="btn btn-sm btn-danger">🗑️</button></td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+    
+    function renderUsers() {
+      return `
+        <div class="page-header">
+          <h1 class="page-title-large">👥 Users</h1>
+          <p class="page-subtitle">Manage system access</p>
+        </div>
+        <button class="btn" style="margin-bottom:16px">➕ Add User</button>
+        <table style="width:100%;border-collapse:collapse;background:var(--bg-secondary);border-radius:8px;overflow:hidden">
+          <thead><tr><th style="padding:12px;text-align:left">Name</th><th>Email</th><th>Role</th><th>Actions</th></tr></thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--border-color)"><td style="padding:12px">👤 Security Admin</td><td>admin@cctv.com</td><td><span style="background:rgba(59,130,246,0.15);color:var(--accent-primary);padding:2px 8px;border-radius:999px;font-size:0.75rem">admin</span></td><td><button class="btn btn-sm">✏️</button></td></tr>
+            <tr><td>👤 Security Officer</td><td>officer@cctv.com</td><td><span style="background:rgba(16,185,129,0.15);color:var(--success);padding:2px 8px;border-radius:999px;font-size:0.75rem">officer</span></td><td><button class="btn btn-sm">✏️</button></td></tr>
+          </tbody>
+        </table>
+      `;
+    }
+    
+    function renderSettings() {
+      return `
+        <div class="page-header">
+          <h1 class="page-title-large">⚙️ Settings</h1>
+          <p class="page-subtitle">System configuration</p>
+        </div>
+        <div class="stat-card" style="text-align:left">
+          <div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;font-size:0.875rem;color:var(--text-secondary)">System Name</label><input type="text" value="CCTV AI Security System" style="width:100%;padding:8px"/></div>
+          <div style="margin-bottom:16px"><label style="display:block;margin-bottom:4px;font-size:0.875rem;color:var(--text-secondary)">Refresh Interval (seconds)</label><input type="number" value="5" min="1" max="300" style="width:100%;padding:8px"/></div>
+          <button class="btn">💾 Save Settings</button>
+        </div>
+      `;
+    }
+  </script>
+</body>
+</html>
