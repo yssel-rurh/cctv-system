@@ -1,0 +1,12 @@
+ <h2>Live Cameras</h2>
+
+{% comment %} {% for camera in cameras %}
+    <img src="{% url 'video_feed' camera.id %}" width="400">
+{% endfor %} {% endcomment %}
+
+<img src="{% url 'video_feed' 0 %}" width="400">
+
+<h2>Alerts</h2>
+{% for alert in alerts %}
+    <p>{{ alert.message }}</p>
+{% endfor %}
