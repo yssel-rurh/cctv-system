@@ -1,0 +1,39 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CCTV AI Security System - Login</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <main class="login-page">
+    <section class="login-panel">
+      <div class="login-header">
+        <div class="login-logo">🎥</div>
+        <h1>CCTV AI Security System</h1>
+        <p>Enter your credentials to access the backend.</p>
+      </div>
+
+      <form class="login-form" action="http://127.0.0.1:8000/login" method="post">
+        <label for="username">Username</label>
+        <input id="username" name="username" type="text" placeholder="admin" required autocomplete="username">
+
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" placeholder="••••••••" required autocomplete="current-password">
+
+        <button type="submit" class="btn btn-primary">Sign In</button>
+      </form>
+
+      <div class="login-info">
+        <p>Demo credentials:</p>
+        <ul>
+          <li>Admin: <strong>admin</strong> / <strong>admin123</strong></li>
+          <li>Officer: <strong>officer</strong> / <strong>officer123</strong></li>
+          <li>Viewer: <strong>viewer</strong> / <strong>viewer123</strong></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

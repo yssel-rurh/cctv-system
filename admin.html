@@ -1,0 +1,74 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CCTV AI Security System - Admin Dashboard</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="dashboard-page">
+    <aside class="sidebar">
+      <div class="sidebar-brand">🎥 CCTV AI System</div>
+      <nav class="sidebar-nav">
+        <a href="admin.html">Dashboard</a>
+        <a href="admin.html">Live Feed</a>
+        <a href="admin.html">Playback</a>
+        <a href="admin.html">Cameras</a>
+        <a href="admin.html">Users</a>
+        <a href="admin.html">Settings</a>
+      </nav>
+      <a class="btn btn-danger sidebar-logout" href="index.html">Logout</a>
+    </aside>
+
+    <main class="dashboard-content">
+      <header class="dashboard-header">
+        <div>
+          <h1>Admin Dashboard</h1>
+          <p>System overview and management tools.</p>
+        </div>
+        <div class="user-card">
+          <span class="user-avatar">A</span>
+          <div>
+            <div>Admin</div>
+            <div class="text-muted">Administrator</div>
+          </div>
+        </div>
+      </header>
+
+      <section class="dashboard-grid">
+        <article class="stat-card">
+          <h2>98%</h2>
+          <p>System Health</p>
+        </article>
+        <article class="stat-card">
+          <h2>4</h2>
+          <p>Active Cameras</p>
+        </article>
+        <article class="stat-card">
+          <h2>12</h2>
+          <p>Open Alerts</p>
+        </article>
+        <article class="stat-card">
+          <h2>18</h2>
+          <p>Registered Users</p>
+        </article>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Live Feed</h2>
+        <div class="placeholder-box">Live streaming is disabled in HTML-only mode.</div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Recent Events</h2>
+        <ul class="event-list">
+          <li>Person detected at Gate A</li>
+          <li>Unauthorized access attempt in Warehouse</li>
+          <li>Camera offline: Parking Lot B</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

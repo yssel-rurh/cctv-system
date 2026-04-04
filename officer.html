@@ -1,0 +1,67 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CCTV AI Security System - Officer Dashboard</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <div class="dashboard-page">
+    <aside class="sidebar">
+      <div class="sidebar-brand">🎥 CCTV AI System</div>
+      <nav class="sidebar-nav">
+        <a href="officer.html">Dashboard</a>
+        <a href="officer.html">Live Feed</a>
+        <a href="officer.html">Playback</a>
+      </nav>
+      <a class="btn btn-danger sidebar-logout" href="index.html">Logout</a>
+    </aside>
+
+    <main class="dashboard-content">
+      <header class="dashboard-header">
+        <div>
+          <h1>Officer Dashboard</h1>
+          <p>Monitor assigned cameras and review recent activity.</p>
+        </div>
+        <div class="user-card">
+          <span class="user-avatar">O</span>
+          <div>
+            <div>Officer</div>
+            <div class="text-muted">Security Officer</div>
+          </div>
+        </div>
+      </header>
+
+      <section class="dashboard-grid">
+        <article class="stat-card">
+          <h2>3</h2>
+          <p>Assigned Cameras</p>
+        </article>
+        <article class="stat-card">
+          <h2>2</h2>
+          <p>Active Alerts</p>
+        </article>
+        <article class="stat-card">
+          <h2>24h</h2>
+          <p>Recent Events</p>
+        </article>
+        <article class="stat-card">
+          <h2>Online</h2>
+          <p>Backend Status</p>
+        </article>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Live Feed</h2>
+        <div class="placeholder-box">Live feed is not available in HTML-only mode.</div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Playback</h2>
+        <div class="placeholder-box">Playback controls are disabled without JavaScript.</div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>
