@@ -1,0 +1,119 @@
+﻿{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CCTV AI Security System - Admin Dashboard</title>
+  <link rel="stylesheet" href="{% static 'dashboard/css/styles.css'%}">
+</head>
+<body>
+  <div class="dashboard-page">
+    <aside class="sidebar">
+      <div class="sidebar-brand"> CCTV AI System</div>
+      <nav class="sidebar-nav">
+        <a href="admin.html">Dashboard</a>
+        <a href="admin.html">Live Feed</a>
+        <a href="admin.html">Playback</a>
+        <a href="admin.html">Cameras</a>
+        <a href="admin.html">Users</a>
+        <a href="admin.html">Settings</a>
+      </nav>
+      <a class="btn btn-danger sidebar-logout" href="index.html">Logout</a>
+    </aside>
+
+    <main class="dashboard-content">
+      <header class="dashboard-header">
+        <div>
+          <h1>Admin Dashboard</h1>
+          <p>System overview and management tools.</p>
+        </div>
+        <div class="user-card">
+          <span class="user-avatar">A</span>
+          <div>
+            <div>Admin</div>
+            <div class="text-muted">{{ request.user.username }}</div>
+          </div>
+        </div>
+      </header>
+
+      <section class="dashboard-grid">
+        <article class="stat-card">
+          <h2>98%</h2>
+          <p>System Health</p>
+        </article>
+        <article class="stat-card">
+          {%if cameras%}
+            <h2>{{ cameras|length|default:0 }}</h2>
+          {%endif%}
+          <p>Active Cameras</p>
+        </article>
+
+        <article class="stat-card">
+          {%if alerts%}
+            <h2>{{ alerts|length|default:0 }}</h2> 
+          {%endif%}
+          <p>Open Alerts</p>
+        </article>
+
+        <article class="stat-card">
+          {%if users%}
+            <h2>{{ users|length|default:0 }}</h2> 
+          {%endif%}
+          <p>Registered Users</p>
+        </article>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Live Feed</h2>
+        <div class="placeholder-box">
+          <img src="{% url 'video_feed' 0 %}" alt="Live camera feed">
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Recent Events</h2>
+        {% if alerts %}
+          <ul class="event-list">
+            {% for alert in alerts %}
+              <li>{{ alert.message}}</li>            
+            {% endfor %}
+          </ul> 
+        {% else %}
+          <p>No Events</p>
+        {% endif %}
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Playback</h2>
+        <div class="placeholder-box">
+          <div class="video-container">
+            {% if videos %}
+                {% for video in videos %}
+                    {% if video.file %}
+                        <video controls>
+                            <source src="{{ video.file.url }}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <p>No uploaded videos.</p>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
+      <section class="dashboard-section">
+        <h2>Upload New Video</h2>
+        <form method="POST" enctype="multipart/form-data" action="{% url 'upload' %}">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit">Upload</button>
+        </form>
+      </section>
+
+    </main>
+  </div>
+</body>
+</html>

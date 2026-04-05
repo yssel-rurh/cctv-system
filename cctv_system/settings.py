@@ -132,7 +132,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -145,3 +145,4 @@ AUTH_USER_MODEL = 'dashboard.User'#this one is a custom user Model
 #Every media upload will be automatically uploaded to this folder
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+

@@ -172,14 +172,14 @@ svg {
   border-color: rgba(79, 144, 255, 0.45);
   box-shadow: 0 0 0 4px rgba(79, 144, 255, 0.12);
 }
-
+/* 
 .login-info {
   margin-top: var(--spacing-lg);
   color: var(--text-secondary);
   font-size: 0.95rem;
-}
+} */
 
-.login-info ul {
+/* .login-info ul {
   margin: var(--spacing-sm) 0 0;
   padding-left: 1.2rem;
   color: var(--text-secondary);
@@ -187,7 +187,7 @@ svg {
 
 .login-info strong {
   color: var(--text-primary);
-}
+} */
 
 /* Dashboard layout */
 .dashboard-page {
@@ -326,6 +326,30 @@ svg {
   display: grid;
   place-items: center;
   text-align: center;
+}
+
+.placeholder-box img{
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+  border-radius: 12px;
+  object-fit: cover;
+}
+
+.video-container {
+  display : grid;
+  gap: 16px;
+  place-items: center;/* centering our videos horizontally  */
+  }
+
+.video-container video{
+  width: 100%;
+  max-width: 600px;
+  height: auto;
+  border-radius: 12px;
+  background: #000;
+  object-fit: cover;
+
 }
 
 .event-list,

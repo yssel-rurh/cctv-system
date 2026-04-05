@@ -52,11 +52,13 @@ def admin_dashboard(request):
     print("It Gets to the Admin Dashboard")
     form = VideoUploadForm()
     print("Rendering Admin Dashboard with cameras:", Camera.objects.all())
-
-    return render(request,'admin_dashboard.html',{
+    User = get_user_model()
+    return render(request,'admin.html',{
+        'users' : User.objects.all(),
         'cameras' : Camera.objects.all(),
         'reports' : Report.objects.all(),
         'videos' : Video.objects.all(),
+        'alerts' : Alert.objects.all(),
         'form' : form     
     })    
     # return render(request, 'admin_dashboard.html')
@@ -66,8 +68,10 @@ def admin_dashboard(request):
 @officer_required
 def officer_dashboard(request):
     return render(request,'officer_dashboard.html',{
-        # 'cameras' : Camera.objects.all(),
-        'alerts' : Alert.objects.all()
+        'cameras' : Camera.objects.all(),
+        'alerts' : Alert.objects.all(),
+        'reports' : Report.objects.all(),
+        
     }) 
     
     
@@ -99,10 +103,11 @@ def upload_video(request):
 
 #UPDATING ALERTS AND SENDING ALERTS VIA EMAIL
 def alert_message(msg):
+    User = get_user_model()
     print("ALERT: ", msg)
     Alert.objects.create(message = msg)
      # Autosending the Alert to the admin and the officers
-    User = get_user_model()
+    
     emails = User.objects.values_list('email',flat = True)
     
     send_mail(
@@ -158,4 +163,3 @@ def video_feed(request, camera_id):
         generate_frames(),
         content_type = 'multipart/x-mixed-replace; boundary=frame'
     )
-        

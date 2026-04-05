@@ -28,39 +28,47 @@
           <span class="user-avatar">O</span>
           <div>
             <div>Officer</div>
-            <div class="text-muted">Security Officer</div>
+            <div class="text-muted">{{request.user.username}}</div>
           </div>
         </div>
       </header>
 
+      <section class="dashboard-section">
+        <h2>Live Feed</h2>
+        <div class="placeholder-box">
+           <img src="{% url 'video_feed' 0 %}" alt="Live camera feed">
+        </div>
+      </section>
+
       <section class="dashboard-grid">
         <article class="stat-card">
-          <h2>3</h2>
+          {%if cameras%}
+            <h2>{{ cameras|length|default:0 }}</h2>
+          {%else%}
           <p>Assigned Cameras</p>
         </article>
+
         <article class="stat-card">
-          <h2>2</h2>
+          {%if alerts%}
+            <h2>{{ alerts|length|default:0 }}</h2> 
+          {%else%}
           <p>Active Alerts</p>
         </article>
+
         <article class="stat-card">
-          <h2>24h</h2>
+          {%if reports%}
+            <h2>{{ reports|length|default:0 }}</h2> 
+          {%endif%}
           <p>Recent Events</p>
         </article>
+        
         <article class="stat-card">
           <h2>Online</h2>
           <p>Backend Status</p>
         </article>
       </section>
 
-      <section class="dashboard-section">
-        <h2>Live Feed</h2>
-        <div class="placeholder-box">Live feed is not available in HTML-only mode.</div>
-      </section>
-
-      <section class="dashboard-section">
-        <h2>Playback</h2>
-        <div class="placeholder-box">Playback controls are disabled without JavaScript.</div>
-      </section>
+      
     </main>
   </div>
 </body>
