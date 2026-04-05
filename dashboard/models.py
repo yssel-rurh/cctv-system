@@ -33,9 +33,8 @@ class Alert(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     # camera = models.ForeignKey(Camera,on_delete= models.CASCADE)# used only when we shall be using ipwebcam
 
-class Report(models.Model):
-    video = models.ForeignKey(Video,on_delete=models.CASCADE)
-    generated_by = models.ForeignKey(User,on_delete=models.CASCADE)
-    summary = models.TextField()
+class AlertSummary(models.Model):
+    summary_text = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
+    alert_count = models.IntegerField(default=0)
 
