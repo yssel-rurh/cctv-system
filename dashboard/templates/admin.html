@@ -13,9 +13,9 @@
       <div class="sidebar-brand"> CCTV AI System</div>
       <nav class="sidebar-nav">
         <a href="admin.html">Dashboard</a>
-        <a href="admin.html">Live Feed</a>
-        <a href="admin.html">Playback</a>
-        <a href="admin.html">Cameras</a>
+        <a href="#live-feed">Live Feed</a>
+        <a href="#playback">Playback</a>
+        <a href="#cameras">Cameras</a>
         <a href="admin.html">Users</a>
         <a href="admin.html">Settings</a>
       </nav>
@@ -42,7 +42,8 @@
           <h2>98%</h2>
           <p>System Health</p>
         </article>
-        <article class="stat-card">
+        <!-- 🔖 Added id="cameras" for bookmark -->
+        <article class="stat-card" id="cameras">
           {%if cameras%}
             <h2>{{ cameras|length|default:0 }}</h2>
           {%endif%}
@@ -64,7 +65,8 @@
         </article>
       </section>
 
-      <section class="dashboard-section">
+      <!-- 🔖 Added id="live-feed" for bookmark -->
+      <section class="dashboard-section" id="live-feed">
         <h2>Live Feed</h2>
         <div class="placeholder-box">
           <img src="{% url 'video_feed' 0 %}" alt="Live camera feed">
@@ -94,7 +96,8 @@
   {% endif %}
 </section>
 
-      <section class="dashboard-section">
+      <!-- 🔖 Added id="playback" for bookmark -->
+      <section class="dashboard-section" id="playback">
         <h2>Playback</h2>
         <div class="placeholder-box">
           <div class="video-container">
